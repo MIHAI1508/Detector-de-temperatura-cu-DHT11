@@ -1,47 +1,59 @@
 
-#include  <DHT.h> ;
-#include  <LiquidCrystal_I2C.h> ;
-#include  <Wire.h> ;
 
-#define  DHTPIN 7   
-#define DHTTYPE DHT11
-#define R_LED 6
-#define G_LED 5
+//Includem librariile pentru componentele noastre
+#include  <DHT.h> ;                //Pentru senzorul DHT11
+#include  <LiquidCrystal_I2C.h> ;  //Pentru interfata Arduino UNO-LCD
+#include  <Wire.h> ;               //Pentru interfata cu 2 fire
+
+//Definim pini pe care folosim
+#define  DHTPIN 7      //Pinul pentru intrare senzorului
+#define R_LED 6        //Pinul pentru led-ul rosu
+#define G_LED 5        //Pinul pentru led-ul verde
+
+//Definim tipul de senzor pe care il folosim  "DHT11" sau "DHT22"
+#define DHTTYPE DHT11  
 
 DHT dht(DHTPIN, DHTTYPE);
 
+//Definim LCD-ul "(Adresa, in caz ca folosim mai multe LCD-uri; Numarul de coloane; Numarul de randuri)"
 LiquidCrystal_I2C lcd(0x27,20,4);  
 
 
-int chk;
-float hum;  
-float temp; 
-const int TEMP_THRESHOLD_UPPER = 35; 
-const int TEMP_THRESHOLD_LOWER = 35; 
+//Definim variabilele
+float hum;                           //Variabila pentru umiditate
+float temp;                          //Variabila pentru temperatura
+const int TEMP_THRESHOLD_UPPER = 35; //Pragul superior de temperatura
+const int TEMP_THRESHOLD_LOWER = 33; //Pragul inferior de temperatura
+const int T = 10;                    //Delay
 
+//Caractere personalizate
+byte grade[8] ={0b00111,0b00101,0b00111,0b00000,0b00000,0b00000,0b00000,0b00000};       //Simbolul de grade
 
-byte grade[8] ={0b00111,0b00101,0b00111,0b00000,0b00000,0b00000,0b00000,0b00000};
+byte Led_OFF_ST[8] ={0b00000,0b00011,0b00100,0b00100,0b00100,0b01111,0b00010,0b00010};  //Partea stanga a led-ului stins
 
-byte Led_OFF_ST[8] ={0b00000,0b00011,0b00100,0b00100,0b00100,0b01111,0b00010,0b00010};
+byte Led_OFF_DR[8] ={0b00000,0b11000,0b00100,0b00100,0b00100,0b11110,0b01000,0b01000};  //Partea dreapta a led-ului stins
 
-byte Led_OFF_DR[8] ={0b00000,0b11000,0b00100,0b00100,0b00100,0b11110,0b01000,0b01000};
+byte Led_ON_ST[8] ={0b00000,0b00011,0b00111,0b00111,0b00111,0b01111,0b00010,0b00010};   //Partea stanga a led-ului aprins
 
-byte Led_ON_ST[8] ={0b00000,0b00011,0b00111,0b00111,0b00111,0b01111,0b00010,0b00010};
+byte Led_ON_DR[8] ={0b00000,0b11000,0b11100,0b11100,0b11100,0b11110,0b01000,0b01000};   //Partea dreapta a led-ului aprins 
 
-byte Led_ON_DR[8] ={0b00000,0b11000,0b11100,0b11100,0b11100,0b11110,0b01000,0b01000};
+int T = 10;
 
-
+//Initializare tuturor componentelor si caracterelor
 void setup()
 {
   Serial.begin(9600);
+  
+  dht.begin();
+
   lcd.init();
-  lcd.begin(16,4);               
-  dht.begin();                       
+  lcd.begin(16,4);                                    
   lcd.backlight();
-  lcd.setBacklight(HIGH);
+  lcd.setBacklight(HIGH );
   
   pinMode(R_LED, OUTPUT);
   pinMode(G_LED, OUTPUT);
+
   lcd.createChar(1, grade);
   lcd.createChar(2, Led_OFF_ST);
   lcd.createChar(3, Led_OFF_DR);
@@ -49,9 +61,11 @@ void setup()
   lcd.createChar(5, Led_ON_DR);
 }
 
+
+
 void  loop()
 {
-  delay(100);
+  delay(T);
 
     hum = dht.readHumidity();
     temp= dht.readTemperature();
@@ -68,7 +82,7 @@ void  loop()
 
 
 
-    delay(10); 
+    delay(T); 
 
 
     if(temp < TEMP_THRESHOLD_UPPER){
@@ -81,8 +95,7 @@ void  loop()
     lcd.print("R");
     lcd.write(byte(2));
     lcd.write(byte(3));
-    } 
-    else if(temp >= TEMP_THRESHOLD_LOWER){
+    } else if(temp >= TEMP_THRESHOLD_LOWER){
     lcd.setCursor(0,2);
     lcd.print("G");
     lcd.write(byte(2));
@@ -94,9 +107,8 @@ void  loop()
     lcd.write(byte(5));
     }
 
-    delay(10); 
+    delay(T); 
     
-
 
     if(temp >= TEMP_THRESHOLD_UPPER){
       Serial.println("Red_led_High");
